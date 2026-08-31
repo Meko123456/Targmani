@@ -48,4 +48,5 @@ dependencies {
     implementation(libs.mlkit.translate)
 
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

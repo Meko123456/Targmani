@@ -49,7 +49,7 @@ import io.github.meko123456.targmani.targmaniApp
 @Composable
 fun TranslateScreen() {
     val context = LocalContext.current
-    val vm: TranslateViewModel = viewModel { TranslateViewModel(context.targmaniApp.translator, context.targmaniApp.settings) }
+    val vm: TranslateViewModel = viewModel { TranslateViewModel(context.targmaniApp.translator, context.targmaniApp.settings, context.targmaniApp.detector) }
     val state by vm.state.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -73,6 +73,12 @@ fun TranslateScreen() {
                 onTarget = vm::onTargetLanguage,
                 onSwap = vm::swap,
             )
+            if (state.input.isNotBlank()) {
+                TextButton(
+                    onClick = vm::detectSourceLanguage,
+                    modifier = Modifier.semantics { contentDescription = "Detect the language of the entered text" },
+                ) { Text("Detect language") }
+            }
             // Source card
             TranslateCard(
                 language = state.direction.from,

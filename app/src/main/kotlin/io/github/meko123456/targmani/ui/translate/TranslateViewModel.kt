@@ -3,7 +3,9 @@ package io.github.meko123456.targmani.ui.translate
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.meko123456.targmani.data.SettingsRepository
+import io.github.meko123456.targmani.domain.DetectionMapper
 import io.github.meko123456.targmani.domain.Language
+import io.github.meko123456.targmani.domain.LanguageDetector
 import io.github.meko123456.targmani.domain.TranslationDirection
 import io.github.meko123456.targmani.domain.Translator
 import kotlinx.coroutines.Job
@@ -38,6 +40,7 @@ data class TranslateUiState(
 class TranslateViewModel(
     private val translator: Translator,
     private val settings: SettingsRepository? = null,
+    private val detector: LanguageDetector? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TranslateUiState())
@@ -74,6 +77,21 @@ class TranslateViewModel(
     fun onTargetLanguage(language: Language) {
         val cur = _state.value.direction
         setDirection(if (language == cur.from) TranslationDirection(cur.to, language) else TranslationDirection(cur.from, language))
+    }
+
+    /**
+     * Identify the typed text's language and switch the source to it. A language Targmani
+     * doesn't offer (or an undetermined result) leaves the direction untouched — see
+     * [DetectionMapper].
+     */
+    fun detectSourceLanguage() {
+        val detector = detector ?: return
+        val text = _state.value.input
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            val tag = detector.detect(text)
+            DetectionMapper.directionFor(tag, _state.value.direction)?.let(::setDirection)
+        }
     }
 
     /** Swap languages and text, then re-translate. */

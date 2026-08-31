@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -47,19 +48,27 @@ import io.github.meko123456.targmani.targmaniApp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TranslateScreen() {
+fun TranslateScreen(onOpenModels: () -> Unit = {}) {
     val context = LocalContext.current
     val vm: TranslateViewModel = viewModel { TranslateViewModel(context.targmaniApp.translator, context.targmaniApp.settings, context.targmaniApp.detector) }
     val state by vm.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
-            TopAppBar(title = {
-                Column {
-                    Text("Targmani", style = MaterialTheme.typography.titleLarge)
-                    Text("თარგმანი", style = MaterialTheme.typography.labelMedium)
-                }
-            })
+            TopAppBar(
+                title = {
+                    Column {
+                        Text("Targmani", style = MaterialTheme.typography.titleLarge)
+                        Text("თარგმანი", style = MaterialTheme.typography.labelMedium)
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = onOpenModels,
+                        modifier = Modifier.semantics { contentDescription = "Offline languages" },
+                    ) { Icon(Icons.Default.Settings, contentDescription = null) }
+                },
+            )
         },
     ) { padding ->
         Column(

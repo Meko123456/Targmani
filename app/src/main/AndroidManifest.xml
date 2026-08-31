@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Model downloads (one-time, per language) go over the network; translation itself is on-device. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:name=".TargmaniApp"
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:supportsRtl="true"
+        android:allowBackup="true"
+        android:theme="@style/Theme.Targmani">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Preload the ML Kit translate model dependencies so first use is quicker. -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="translate" />
+    </application>
+
+</manifest>

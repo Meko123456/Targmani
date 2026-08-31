@@ -2,6 +2,7 @@ package io.github.meko123456.targmani.ui.translate
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.targmani.data.SettingsRepository
 import io.github.meko123456.targmani.domain.Language
 import io.github.meko123456.targmani.domain.TranslationDirection
 import io.github.meko123456.targmani.domain.Translator
@@ -10,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,13 +37,27 @@ data class TranslateUiState(
  */
 class TranslateViewModel(
     private val translator: Translator,
-    private val requireWifi: Boolean = false,
+    private val settings: SettingsRepository? = null,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TranslateUiState())
     val state: StateFlow<TranslateUiState> = _state.asStateFlow()
 
     private var translateJob: Job? = null
+
+    /** Downloads need Wi-Fi only if the user asked for that; read with the stored settings. */
+    private var requireWifi: Boolean = false
+
+    init {
+        // Restore the last direction so the app opens where the user left off.
+        settings?.let { repo ->
+            viewModelScope.launch {
+                val stored = repo.settings.first()
+                requireWifi = stored.wifiOnlyDownloads
+                _state.update { it.copy(direction = stored.direction) }
+            }
+        }
+    }
 
     fun onInputChange(text: String) {
         _state.update { it.copy(input = text) }
@@ -65,11 +81,13 @@ class TranslateViewModel(
         _state.update {
             it.copy(direction = it.direction.swapped(), input = it.output, output = it.input)
         }
+        settings?.let { repo -> viewModelScope.launch { repo.setDirection(_state.value.direction) } }
         schedule()
     }
 
     private fun setDirection(direction: TranslationDirection) {
         _state.update { it.copy(direction = direction) }
+        settings?.let { repo -> viewModelScope.launch { repo.setDirection(direction) } }
         schedule()
     }
 

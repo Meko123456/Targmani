@@ -49,7 +49,7 @@ import io.github.meko123456.targmani.targmaniApp
 @Composable
 fun TranslateScreen() {
     val context = LocalContext.current
-    val vm: TranslateViewModel = viewModel { TranslateViewModel(context.targmaniApp.translator) }
+    val vm: TranslateViewModel = viewModel { TranslateViewModel(context.targmaniApp.translator, context.targmaniApp.settings) }
     val state by vm.state.collectAsStateWithLifecycle()
 
     Scaffold(

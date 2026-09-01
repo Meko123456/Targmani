@@ -20,9 +20,9 @@ as a genuinely offline tool.
 
 ## Screenshots
 
-| Translate | Offline languages | History |
-|:---:|:---:|:---:|
-| ![Translate](docs/screenshots/1-translate.png) | ![Offline languages](docs/screenshots/2-offline-languages.png) | ![History](docs/screenshots/3-history.png) |
+| Translate | Offline languages | History | Dark |
+|:---:|:---:|:---:|:---:|
+| ![Translate](docs/screenshots/1-translate.png) | ![Offline languages](docs/screenshots/2-offline-languages.png) | ![History](docs/screenshots/3-history.png) | ![Dark](docs/screenshots/4-dark.png) |
 
 ## Features
 
@@ -43,8 +43,13 @@ as a genuinely offline tool.
 - 📋 **Copy, share and speak** the result. Speaking is best-effort: Georgian is not in the standard
   Android voice set, so a missing voice is reported plainly instead of failing silently.
 - 🅰️ **Right-to-left aware** — Arabic input and output lay out correctly.
+- ♿ **Accessible** — every interactive control carries a label; audited across all three screens
+  (translate, offline languages, history) with zero unlabelled controls.
 - 🔒 **Private & offline** — your text never leaves the device; only model files are downloaded.
-- 📷 **Camera translate** — point at a sign or menu (a later milestone, see the issues).
+- 📷 **Camera translate** — deferred, and honestly so: ML Kit's text recogniser reads only Latin,
+  Chinese, Devanagari, Japanese and Korean script, so it cannot read a Georgian or Arabic sign —
+  exactly the two cases that would be useful here. Tracked in
+  [#11](https://github.com/Meko123456/Targmani/issues/11) with the options.
 - 🎨 **Material 3** — dynamic color, light/dark, edge-to-edge.
 
 ## Architecture

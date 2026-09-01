@@ -2,8 +2,10 @@ package io.github.meko123456.targmani.ui.translate
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.meko123456.targmani.data.HistoryRepository
 import io.github.meko123456.targmani.data.SettingsRepository
 import io.github.meko123456.targmani.domain.DetectionMapper
+import io.github.meko123456.targmani.domain.HistoryCandidate
 import io.github.meko123456.targmani.domain.Language
 import io.github.meko123456.targmani.domain.LanguageDetector
 import io.github.meko123456.targmani.domain.TranslationDirection
@@ -41,6 +43,8 @@ class TranslateViewModel(
     private val translator: Translator,
     private val settings: SettingsRepository? = null,
     private val detector: LanguageDetector? = null,
+    private val history: HistoryRepository? = null,
+    private val now: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TranslateUiState())
@@ -94,6 +98,14 @@ class TranslateViewModel(
         }
     }
 
+    /** Load a saved translation back into the editor without re-running the engine. */
+    fun loadFromHistory(sourceText: String, translatedText: String, direction: TranslationDirection) {
+        translateJob?.cancel()
+        _state.update {
+            it.copy(direction = direction, input = sourceText, output = translatedText, status = TranslateStatus.Idle)
+        }
+    }
+
     /** Swap languages and text, then re-translate. */
     fun swap() {
         _state.update {
@@ -128,7 +140,18 @@ class TranslateViewModel(
             }
             _state.update { it.copy(status = TranslateStatus.Translating) }
             translator.translate(snapshot.input, snapshot.direction)
-                .onSuccess { out -> _state.update { it.copy(output = out, status = TranslateStatus.Idle) } }
+                .onSuccess { out ->
+                    _state.update { it.copy(output = out, status = TranslateStatus.Idle) }
+                    // Recorded through HistoryPolicy, which collapses a run of half-typed fragments.
+                    history?.record(
+                        HistoryCandidate(
+                            sourceText = snapshot.input,
+                            translatedText = out,
+                            direction = snapshot.direction,
+                            timestampMillis = now(),
+                        ),
+                    )
+                }
                 .onFailure { _state.update { it.copy(status = TranslateStatus.Error(TRANSLATE_FAILED)) } }
         }
     }

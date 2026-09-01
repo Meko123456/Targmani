@@ -2,7 +2,9 @@ package io.github.meko123456.targmani
 
 import android.app.Application
 import android.content.Context
+import io.github.meko123456.targmani.data.HistoryRepository
 import io.github.meko123456.targmani.data.SettingsRepository
+import io.github.meko123456.targmani.data.TargmaniDatabase
 import io.github.meko123456.targmani.domain.LanguageDetector
 import io.github.meko123456.targmani.domain.ModelStore
 import io.github.meko123456.targmani.domain.Translator
@@ -23,6 +25,9 @@ class TargmaniApp : Application() {
 
     /** Per-language on-device model storage (list / download / delete). */
     val modelStore: ModelStore by lazy { MlKitModelStore() }
+
+    /** Recent translations and starred phrases. */
+    val history: HistoryRepository by lazy { HistoryRepository(TargmaniDatabase.get(this).translationDao()) }
 }
 
 val Context.targmaniApp: TargmaniApp

@@ -13,6 +13,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,10 +49,17 @@ import io.github.meko123456.targmani.targmaniApp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TranslateScreen(onOpenModels: () -> Unit = {}) {
+fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {}, vm: TranslateViewModel? = null) {
     val context = LocalContext.current
-    val vm: TranslateViewModel = viewModel { TranslateViewModel(context.targmaniApp.translator, context.targmaniApp.settings, context.targmaniApp.detector) }
-    val state by vm.state.collectAsStateWithLifecycle()
+    val viewModel: TranslateViewModel = vm ?: viewModel {
+        TranslateViewModel(
+            context.targmaniApp.translator,
+            context.targmaniApp.settings,
+            context.targmaniApp.detector,
+            context.targmaniApp.history,
+        )
+    }
+    val state by viewModel.state.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -63,6 +71,10 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}) {
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = onOpenHistory,
+                        modifier = Modifier.semantics { contentDescription = "History" },
+                    ) { Icon(Icons.Default.List, contentDescription = null) }
                     IconButton(
                         onClick = onOpenModels,
                         modifier = Modifier.semantics { contentDescription = "Offline languages" },
@@ -78,13 +90,13 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}) {
             LanguageBar(
                 source = state.direction.from,
                 target = state.direction.to,
-                onSource = vm::onSourceLanguage,
-                onTarget = vm::onTargetLanguage,
-                onSwap = vm::swap,
+                onSource = viewModel::onSourceLanguage,
+                onTarget = viewModel::onTargetLanguage,
+                onSwap = viewModel::swap,
             )
             if (state.input.isNotBlank()) {
                 TextButton(
-                    onClick = vm::detectSourceLanguage,
+                    onClick = viewModel::detectSourceLanguage,
                     modifier = Modifier.semantics { contentDescription = "Detect the language of the entered text" },
                 ) { Text("Detect language") }
             }
@@ -94,7 +106,7 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}) {
                 text = state.input,
                 rtl = state.direction.sourceRtl,
                 editable = true,
-                onTextChange = vm::onInputChange,
+                onTextChange = viewModel::onInputChange,
                 placeholder = "Enter text",
             )
             StatusLine(state.status)

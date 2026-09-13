@@ -55,7 +55,7 @@ as a genuinely offline tool.
 ## Architecture
 
 ```
-domain/    pure Kotlin, 53 unit tests — Language (BCP-47 + endonyms + RTL), LanguageCatalog
+domain/    pure Kotlin, 41 unit tests (53 in the repo) — Language (BCP-47 + endonyms + RTL), LanguageCatalog
            (offered languages, direction & model-pair math), TranslationDirection (+ swap),
            ModelPlanner (what a direction still needs, English-pivot rules), HistoryPolicy
            (what is worth recording), DetectionMapper, SettingsCodec, SpeechLocale, and the
@@ -76,7 +76,7 @@ ML Kit dependency lives behind one seam.
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
-Kotlin 2.3, AGP 9, Compose BOM 2026.06, minSdk 26, ML Kit Translate 17, Room 2.8.
+Kotlin 2.4.10, AGP 9.1.1, Gradle 9.7.1, Compose BOM 2026.06, minSdk 26, ML Kit Translate 17, Room 2.8.
 
 Verified on a real device: "Good morning friend" → "დილა მშვიდობისა" in about six seconds
 including the one-time model download, and the swap translates it straight back.

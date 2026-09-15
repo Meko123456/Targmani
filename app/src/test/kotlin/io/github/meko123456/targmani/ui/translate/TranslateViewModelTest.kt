@@ -37,6 +37,56 @@ class TranslateViewModelTest {
     @After fun tearDown() = Dispatchers.resetMain()
 
     @Test
+    fun `swapping before the translation arrives keeps the typed text`() = runTest(dispatcher) {
+        // The bug: type, realise the direction is wrong, hit swap before the output appears. The
+        // sentence used to be moved into the output field and then cleared outright.
+        val vm = TranslateViewModel(FakeTranslator(ready = true))
+        vm.onInputChange("gamarjoba")
+        vm.swap() // no advanceUntilIdle: still inside the debounce, output is empty
+
+        assertEquals("gamarjoba", vm.state.value.input)
+        assertEquals(TranslationDirection(Language.GEORGIAN, Language.ENGLISH), vm.state.value.direction)
+
+        advanceUntilIdle()
+        assertEquals("gamarjoba", vm.state.value.input)
+        assertEquals("[ka->en] gamarjoba", vm.state.value.output)
+    }
+
+    @Test
+    fun `swapping while the models are downloading keeps the typed text`() = runTest(dispatcher) {
+        val vm = TranslateViewModel(FakeTranslator(ready = false))
+        vm.onInputChange("hello there")
+        vm.swap()
+        advanceUntilIdle()
+        assertEquals("hello there", vm.state.value.input)
+    }
+
+    @Test
+    fun `swapping after a failed translation keeps the typed text`() = runTest(dispatcher) {
+        val vm = TranslateViewModel(FakeTranslator(ready = true, failTranslate = true))
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+        assertTrue(vm.state.value.output.isBlank())
+
+        vm.swap()
+        advanceUntilIdle()
+        assertEquals("hello", vm.state.value.input)
+    }
+
+    @Test
+    fun `swapping with a translation present still exchanges the two texts`() = runTest(dispatcher) {
+        val vm = TranslateViewModel(FakeTranslator(ready = true))
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+        assertEquals("[en->ka] hello", vm.state.value.output)
+
+        vm.swap()
+        assertEquals("[en->ka] hello", vm.state.value.input)
+        assertEquals("hello", vm.state.value.output)
+        assertEquals(TranslationDirection(Language.GEORGIAN, Language.ENGLISH), vm.state.value.direction)
+    }
+
+    @Test
     fun `typing translates after the debounce`() = runTest(dispatcher) {
         val vm = TranslateViewModel(FakeTranslator(ready = true))
         vm.onInputChange("hello")

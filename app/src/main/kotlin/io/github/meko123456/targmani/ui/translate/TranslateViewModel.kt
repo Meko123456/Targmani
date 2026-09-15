@@ -106,10 +106,27 @@ class TranslateViewModel(
         }
     }
 
-    /** Swap languages and text, then re-translate. */
+    /**
+     * Swap languages and text, then re-translate.
+     *
+     * The text only moves when there is a translation to move. With no output yet — the debounce
+     * still running, the models still downloading, the last attempt failed — swapping used to put
+     * the empty output into the input and the typed text into the output, and [schedule] then saw
+     * a blank input and cleared the output too. The sentence was simply gone, and the moment it
+     * happened is the most likely one: you type, realise the direction is wrong, and hit swap
+     * before the translation has had a chance to appear.
+     *
+     * So when there is nothing to swap, only the direction turns around and the typed text stays
+     * where it is, which is also what "translate this the other way" means.
+     */
     fun swap() {
         _state.update {
-            it.copy(direction = it.direction.swapped(), input = it.output, output = it.input)
+            val direction = it.direction.swapped()
+            if (it.output.isBlank()) {
+                it.copy(direction = direction)
+            } else {
+                it.copy(direction = direction, input = it.output, output = it.input)
+            }
         }
         settings?.let { repo -> viewModelScope.launch { repo.setDirection(_state.value.direction) } }
         schedule()

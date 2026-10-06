@@ -71,16 +71,20 @@ class TranslateViewModel(
         schedule()
     }
 
-    /** Pick a source language; if it collides with the current target, swap so the pair stays valid. */
+    /**
+     * Pick a source language. Picking the current target is asking for a swap, and gets one, texts
+     * included, exactly as the swap button gives it: moving only the labels would leave the typed
+     * text filed under the wrong language and "translated" from a language it is not in.
+     */
     fun onSourceLanguage(language: Language) {
         val cur = _state.value.direction
-        setDirection(if (language == cur.to) TranslationDirection(language, cur.from) else TranslationDirection(language, cur.to))
+        if (language == cur.to) swap() else setDirection(TranslationDirection(language, cur.to))
     }
 
-    /** Pick a target language; if it collides with the current source, swap so the pair stays valid. */
+    /** Pick a target language. Picking the current source is a swap, as for [onSourceLanguage]. */
     fun onTargetLanguage(language: Language) {
         val cur = _state.value.direction
-        setDirection(if (language == cur.from) TranslationDirection(cur.to, language) else TranslationDirection(cur.from, language))
+        if (language == cur.from) swap() else setDirection(TranslationDirection(cur.from, language))
     }
 
     /**

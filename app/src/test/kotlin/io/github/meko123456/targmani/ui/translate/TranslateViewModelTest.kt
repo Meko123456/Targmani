@@ -87,6 +87,45 @@ class TranslateViewModelTest {
     }
 
     @Test
+    fun `picking the source language as the target is a swap, texts included`() = runTest(dispatcher) {
+        // Found on an emulator: English to Georgian, then English picked as the target. The labels
+        // swapped, but "Good morning" stayed in the box now marked Georgian and was "translated"
+        // from Georgian to English.
+        val vm = TranslateViewModel(FakeTranslator(ready = true))
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+
+        vm.onTargetLanguage(Language.ENGLISH)
+        assertEquals(TranslationDirection(Language.GEORGIAN, Language.ENGLISH), vm.state.value.direction)
+        assertEquals("[en->ka] hello", vm.state.value.input)
+        assertEquals("hello", vm.state.value.output)
+    }
+
+    @Test
+    fun `picking the target language as the source is a swap too`() = runTest(dispatcher) {
+        val vm = TranslateViewModel(FakeTranslator(ready = true))
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+
+        vm.onSourceLanguage(Language.GEORGIAN)
+        assertEquals(TranslationDirection(Language.GEORGIAN, Language.ENGLISH), vm.state.value.direction)
+        assertEquals("[en->ka] hello", vm.state.value.input)
+    }
+
+    @Test
+    fun `picking a third language moves only that side and keeps the typed text`() = runTest(dispatcher) {
+        val vm = TranslateViewModel(FakeTranslator(ready = true))
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+
+        vm.onTargetLanguage(Language.ARABIC)
+        advanceUntilIdle()
+        assertEquals(TranslationDirection(Language.ENGLISH, Language.ARABIC), vm.state.value.direction)
+        assertEquals("hello", vm.state.value.input)
+        assertEquals("[en->ar] hello", vm.state.value.output)
+    }
+
+    @Test
     fun `typing translates after the debounce`() = runTest(dispatcher) {
         val vm = TranslateViewModel(FakeTranslator(ready = true))
         vm.onInputChange("hello")

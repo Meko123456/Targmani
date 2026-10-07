@@ -142,7 +142,7 @@ private fun HistoryRow(
     Card(
         Modifier.fillMaxWidth()
             .clickable(onClickLabel = "Reuse this translation", onClick = onReuse)
-            .semantics { contentDescription = "$pair. ${record.sourceText}. ${record.translatedText}" },
+            .semantics { contentDescription = spokenSentences(pair, record.sourceText, record.translatedText) },
     ) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
@@ -173,3 +173,13 @@ private fun HistoryRow(
         }
     }
 }
+
+/**
+ * Joins [parts] into one text to be read aloud, adding a full stop only after a part that does
+ * not already end a sentence. A plain ". " between them read "How are you?. დილა…": a question
+ * mark and a full stop, which a screen reader set to read punctuation says out loud.
+ */
+internal fun spokenSentences(vararg parts: String): String =
+    parts.map(String::trim).filter(String::isNotEmpty).joinToString(" ") { part ->
+        if (part.last() in ".?!…") part else "$part."
+    }

@@ -13,11 +13,12 @@ import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.materialIcon
+import androidx.compose.material.icons.materialPath
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -43,6 +44,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
@@ -158,6 +160,33 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
     }
 }
 
+/**
+ * Material's swap_horiz: two opposed arrows, for the button that swaps the languages, which showed
+ * Refresh's circular arrow. It is in the extended icon set, and this app ships only the core one.
+ */
+private val SwapHorizIcon: ImageVector = materialIcon(name = "Filled.SwapHoriz") {
+    materialPath {
+        moveTo(6.99f, 11.0f)
+        lineTo(3.0f, 15.0f)
+        lineToRelative(3.99f, 4.0f)
+        verticalLineToRelative(-3.0f)
+        horizontalLineTo(14.0f)
+        verticalLineToRelative(-2.0f)
+        horizontalLineTo(6.99f)
+        verticalLineToRelative(-3.0f)
+        close()
+        moveTo(21.0f, 9.0f)
+        lineToRelative(-3.99f, -4.0f)
+        verticalLineToRelative(3.0f)
+        horizontalLineTo(10.0f)
+        verticalLineToRelative(2.0f)
+        horizontalLineToRelative(7.01f)
+        verticalLineToRelative(3.0f)
+        lineTo(21.0f, 9.0f)
+        close()
+    }
+}
+
 @Composable
 private fun LanguageBar(
     source: Language,
@@ -169,7 +198,7 @@ private fun LanguageBar(
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         LanguagePicker(source, Modifier.weight(1f), onSource)
         IconButton(onClick = onSwap, modifier = Modifier.semantics { contentDescription = "Swap languages" }) {
-            Icon(Icons.Default.Refresh, contentDescription = null)
+            Icon(SwapHorizIcon, contentDescription = null)
         }
         LanguagePicker(target, Modifier.weight(1f), onTarget)
     }

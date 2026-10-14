@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -29,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -84,8 +86,13 @@ fun ModelsScreen(onBack: () -> Unit) {
             }
 
             Card(Modifier.fillMaxWidth()) {
+                // The row is the switch: tapping the words flips it too, and TalkBack reads the
+                // setting, its note and its state as one. Only the small switch itself used to react.
                 Row(
-                    Modifier.fillMaxWidth().padding(16.dp),
+                    Modifier
+                        .fillMaxWidth()
+                        .toggleable(value = state.wifiOnly, role = Role.Switch, onValueChange = vm::setWifiOnly)
+                        .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
@@ -96,11 +103,7 @@ fun ModelsScreen(onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Switch(
-                        checked = state.wifiOnly,
-                        onCheckedChange = vm::setWifiOnly,
-                        modifier = Modifier.semantics { contentDescription = "Download language models over Wi-Fi only" },
-                    )
+                    Switch(checked = state.wifiOnly, onCheckedChange = null)
                 }
             }
 

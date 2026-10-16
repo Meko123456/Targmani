@@ -76,7 +76,7 @@ ML Kit dependency lives behind one seam.
 ./gradlew :app:assembleDebug :app:testDebugUnitTest
 ```
 
-Kotlin 2.4.20, AGP 9.4.1, Gradle 9.8.0, Compose BOM 2026.09, minSdk 26, ML Kit Translate 17, Room 2.8.
+Kotlin 2.4.21, AGP 9.4.1, Gradle 9.8.0, Compose BOM 2026.09, minSdk 26, ML Kit Translate 17, Room 2.8.
 
 Verified on a real device: "Good morning friend" → "დილა მშვიდობისა" in about six seconds
 including the one-time model download, and the swap translates it straight back.

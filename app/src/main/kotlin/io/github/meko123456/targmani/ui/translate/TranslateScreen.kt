@@ -1,5 +1,6 @@
 package io.github.meko123456.targmani.ui.translate
 
+import android.content.ClipData
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Settings
@@ -45,9 +46,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDirection
@@ -76,7 +77,7 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     // One engine per screen; released when the screen leaves composition.
@@ -101,7 +102,7 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
                     IconButton(
                         onClick = onOpenHistory,
                         modifier = Modifier.semantics { contentDescription = "History" },
-                    ) { Icon(Icons.Default.List, contentDescription = null) }
+                    ) { Icon(Icons.AutoMirrored.Filled.List, contentDescription = null) }
                     IconButton(
                         onClick = onOpenModels,
                         modifier = Modifier.semantics { contentDescription = "Offline languages" },
@@ -149,8 +150,10 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
             if (state.output.isNotBlank()) {
                 ResultActions(
                     onCopy = {
-                        clipboard.setText(AnnotatedString(state.output))
-                        scope.launch { snackbar.showSnackbar("Copied") }
+                        scope.launch {
+                            clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("Translation", state.output)))
+                            snackbar.showSnackbar("Copied")
+                        }
                     },
                     onShare = { shareText(context, state.output) },
                     onSpeak = { speaker.speak(state.output, state.direction.to) },

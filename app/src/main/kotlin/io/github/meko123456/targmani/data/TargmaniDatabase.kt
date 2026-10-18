@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [TranslationRecord::class], version = 1, exportSchema = false)
+@Database(entities = [TranslationRecord::class], version = 1, exportSchema = true)
 abstract class TargmaniDatabase : RoomDatabase() {
     abstract fun translationDao(): TranslationDao
 

@@ -2,9 +2,11 @@ package io.github.meko123456.targmani.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import io.github.meko123456.targmani.domain.SettingsCodec
@@ -12,7 +14,13 @@ import io.github.meko123456.targmani.domain.TranslationDirection
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "targmani")
+// A file that won't parse is replaced with empty preferences rather than thrown on every read. The
+// CorruptionException from `data` crashed the app at launch, every launch, until its storage was
+// cleared by hand.
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
+    name = "targmani",
+    corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+)
 
 /** What the user chose last: the translation direction and whether model downloads need Wi-Fi. */
 data class Settings(

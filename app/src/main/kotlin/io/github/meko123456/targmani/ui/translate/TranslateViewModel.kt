@@ -32,6 +32,8 @@ data class TranslateUiState(
     val input: String = "",
     val output: String = "",
     val status: TranslateStatus = TranslateStatus.Idle,
+    /** Whether a missing model may only download over Wi-Fi, as set on the languages screen. */
+    val wifiOnly: Boolean = false,
 )
 
 /**
@@ -52,16 +54,18 @@ class TranslateViewModel(
 
     private var translateJob: Job? = null
 
-    /** Downloads need Wi-Fi only if the user asked for that; read with the stored settings. */
-    private var requireWifi: Boolean = false
-
     init {
-        // Restore the last direction so the app opens where the user left off.
         settings?.let { repo ->
+            // Restore the last direction so the app opens where the user left off.
             viewModelScope.launch {
                 val stored = repo.settings.first()
-                requireWifi = stored.wifiOnlyDownloads
                 _state.update { it.copy(direction = stored.direction) }
+            }
+            // Followed, not read once: it is switched on the languages screen while this one stays
+            // alive underneath, and a download started after coming back used the old choice, over
+            // mobile data when the rider had just said Wi-Fi only.
+            viewModelScope.launch {
+                repo.settings.collect { stored -> _state.update { it.copy(wifiOnly = stored.wifiOnlyDownloads) } }
             }
         }
     }
@@ -153,7 +157,7 @@ class TranslateViewModel(
             delay(DEBOUNCE_MS)
             if (!translator.isReady(snapshot.direction)) {
                 _state.update { it.copy(status = TranslateStatus.Downloading) }
-                val downloaded = translator.download(snapshot.direction, requireWifi)
+                val downloaded = translator.download(snapshot.direction, _state.value.wifiOnly)
                 if (downloaded.isFailure) {
                     _state.update { it.copy(status = TranslateStatus.Error(DOWNLOAD_FAILED)) }
                     return@launch

@@ -1,10 +1,16 @@
 package io.github.meko123456.targmani.ui.translate
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
+import io.github.meko123456.targmani.data.SettingsRepository
 import io.github.meko123456.targmani.domain.Language
 import io.github.meko123456.targmani.domain.TranslationDirection
 import io.github.meko123456.targmani.domain.Translator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -24,13 +30,39 @@ class TranslateViewModelTest {
     /** Records download calls; translate returns a marker so output is checkable. */
     private class FakeTranslator(var ready: Boolean = true, val failTranslate: Boolean = false) : Translator {
         var downloads = 0
+        val wifiOnlyAsked = mutableListOf<Boolean>()
         override suspend fun isReady(direction: TranslationDirection) = ready
         override suspend fun download(direction: TranslationDirection, requireWifi: Boolean): Result<Unit> {
-            downloads++; ready = true; return Result.success(Unit)
+            downloads++; wifiOnlyAsked += requireWifi; ready = true; return Result.success(Unit)
         }
         override suspend fun translate(text: String, direction: TranslationDirection): Result<String> =
             if (failTranslate) Result.failure(RuntimeException("nope"))
             else Result.success("[${direction.from.code}->${direction.to.code}] $text")
+    }
+
+    /** Preferences in memory, so a setting can change while the view model is alive. */
+    private class MemoryStore : DataStore<Preferences> {
+        private val state = MutableStateFlow(emptyPreferences())
+        override val data: Flow<Preferences> = state
+        override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
+            transform(state.value).also { state.value = it }
+    }
+
+    @Test
+    fun `a Wi-Fi only choice made on the languages screen reaches the next download`() = runTest(dispatcher) {
+        val settings = SettingsRepository(MemoryStore())
+        val translator = FakeTranslator(ready = false)
+        val vm = TranslateViewModel(translator, settings)
+        advanceUntilIdle()
+
+        // As the languages screen does, with this screen still alive underneath it.
+        settings.setWifiOnlyDownloads(true)
+        advanceUntilIdle()
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+
+        assertEquals(listOf(true), translator.wifiOnlyAsked)
+        assertTrue(vm.state.value.wifiOnly)
     }
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)

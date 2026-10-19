@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.meko123456.targmani.data.wifiConnection
 import io.github.meko123456.targmani.domain.Language
 import io.github.meko123456.targmani.domain.ModelPlanner
 import io.github.meko123456.targmani.domain.ModelState
@@ -49,6 +50,7 @@ fun ModelsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val vm: ModelsViewModel = viewModel { ModelsViewModel(context.targmaniApp.modelStore, context.targmaniApp.settings) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val onWifi by remember(context) { context.wifiConnection() }.collectAsStateWithLifecycle(initialValue = true)
     var confirmDelete: Language? by remember { mutableStateOf(null) }
 
     Scaffold(
@@ -77,6 +79,7 @@ fun ModelsScreen(onBack: () -> Unit) {
             state.rows.forEach { row ->
                 ModelRow(
                     status = row,
+                    waitingForWifi = state.wifiOnly && !onWifi,
                     onDownload = { vm.download(row.language) },
                     onDelete = {
                         if (ModelPlanner.deletingBreaksAllPairs(row.language)) confirmDelete = row.language
@@ -133,11 +136,12 @@ fun ModelsScreen(onBack: () -> Unit) {
 }
 
 @Composable
-private fun ModelRow(status: ModelStatus, onDownload: () -> Unit, onDelete: () -> Unit) {
+private fun ModelRow(status: ModelStatus, waitingForWifi: Boolean, onDownload: () -> Unit, onDelete: () -> Unit) {
     val stateLabel = when (status.state) {
         ModelState.DOWNLOADED -> "Available offline"
         ModelState.NOT_DOWNLOADED -> "Not downloaded"
-        ModelState.DOWNLOADING -> "Downloading…"
+        // ML Kit holds a Wi-Fi-only download without a word until there is Wi-Fi.
+        ModelState.DOWNLOADING -> if (waitingForWifi) "Waiting for Wi-Fi…" else "Downloading…"
         ModelState.DELETING -> "Deleting…"
     }
     Card(Modifier.fillMaxWidth()) {

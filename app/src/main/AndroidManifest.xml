@@ -3,6 +3,8 @@
 
     <!-- Model downloads (one-time, per language) go over the network; translation itself is on-device. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- To tell a model download waiting for Wi-Fi from one under way (data/WifiConnection.kt). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".TargmaniApp"

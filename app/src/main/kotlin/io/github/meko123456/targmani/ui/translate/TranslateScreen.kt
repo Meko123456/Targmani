@@ -57,6 +57,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import io.github.meko123456.targmani.data.wifiConnection
 import io.github.meko123456.targmani.domain.Language
 import io.github.meko123456.targmani.domain.LanguageCatalog
 import io.github.meko123456.targmani.domain.SpeechLocale
@@ -77,6 +78,7 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
         )
     }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val onWifi by remember(context) { context.wifiConnection() }.collectAsStateWithLifecycle(initialValue = true)
     val clipboard = LocalClipboard.current
     val snackbar = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -137,7 +139,7 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
                 onTextChange = viewModel::onInputChange,
                 placeholder = "Enter text",
             )
-            StatusLine(state.status)
+            StatusLine(state.status, waitingForWifi = state.wifiOnly && !onWifi)
             // Target card
             TranslateCard(
                 language = state.direction.to,
@@ -262,10 +264,12 @@ private fun TranslateCard(
 }
 
 @Composable
-private fun StatusLine(status: TranslateStatus) {
+private fun StatusLine(status: TranslateStatus, waitingForWifi: Boolean) {
     when (status) {
         TranslateStatus.Idle -> Unit
-        TranslateStatus.Downloading -> InlineProgress("Downloading language model…")
+        TranslateStatus.Downloading -> InlineProgress(
+            if (waitingForWifi) "Waiting for Wi-Fi to download the language model…" else "Downloading language model…",
+        )
         TranslateStatus.Translating -> InlineProgress("Translating…")
         is TranslateStatus.Error -> Text(
             status.message,

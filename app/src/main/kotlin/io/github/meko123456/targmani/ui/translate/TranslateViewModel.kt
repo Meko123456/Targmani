@@ -106,6 +106,23 @@ class TranslateViewModel(
         }
     }
 
+    /**
+     * Text handed over by another app: picked out and sent from the selection menu, or shared. It
+     * replaces what was in the editor, and its language is detected first, since a phrase from
+     * another app is as likely to be in either language as the direction last used.
+     */
+    fun receiveText(text: String) {
+        val incoming = text.trim()
+        if (incoming.isEmpty()) return
+        translateJob?.cancel()
+        _state.update { it.copy(input = incoming, output = "", status = TranslateStatus.Idle) }
+        viewModelScope.launch {
+            val detected = detector?.detect(incoming)
+            val direction = DetectionMapper.directionFor(detected, _state.value.direction)
+            if (direction != null) setDirection(direction) else schedule()
+        }
+    }
+
     /** Load a saved translation back into the editor without re-running the engine. */
     fun loadFromHistory(sourceText: String, translatedText: String, direction: TranslationDirection) {
         translateJob?.cancel()

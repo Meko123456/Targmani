@@ -1,11 +1,13 @@
 package io.github.meko123456.targmani
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,10 +24,26 @@ import io.github.meko123456.targmani.ui.translate.TranslateViewModel
 private enum class Screen { Translate, Models, History }
 
 class MainActivity : ComponentActivity() {
+    /** The last text another app handed over; see [IncomingText]. */
+    private var handover by mutableStateOf<Handover?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent { TargmaniTheme { TargmaniNav() } }
+        // Only on first creation: a rotation recreates the activity with the same intent, and must
+        // not paste the text again over whatever was typed since.
+        if (savedInstanceState == null) take(intent)
+        setContent { TargmaniTheme { TargmaniNav(handover) } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        take(intent)
+    }
+
+    private fun take(intent: Intent?) {
+        val text = IncomingText.from(intent) ?: return
+        handover = Handover(text, (handover?.number ?: 0) + 1)
     }
 }
 
@@ -34,13 +52,20 @@ class MainActivity : ComponentActivity() {
  * load straight back into the editor when the user taps it.
  */
 @Composable
-private fun TargmaniNav() {
+private fun TargmaniNav(handover: Handover?) {
     val context = LocalContext.current
     val app = context.targmaniApp
     val translateVm: TranslateViewModel = viewModel {
         TranslateViewModel(app.translator, app.settings, app.detector, app.history)
     }
     var screen by rememberSaveable { mutableStateOf(Screen.Translate) }
+
+    LaunchedEffect(handover?.number) {
+        handover?.let {
+            translateVm.receiveText(it.text)
+            screen = Screen.Translate
+        }
+    }
 
     when (screen) {
         Screen.Translate -> TranslateScreen(

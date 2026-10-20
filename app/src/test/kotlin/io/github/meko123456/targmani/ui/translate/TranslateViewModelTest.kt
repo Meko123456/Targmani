@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import io.github.meko123456.targmani.data.SettingsRepository
 import io.github.meko123456.targmani.domain.Language
+import io.github.meko123456.targmani.domain.LanguageDetector
 import io.github.meko123456.targmani.domain.TranslationDirection
 import io.github.meko123456.targmani.domain.Translator
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +64,31 @@ class TranslateViewModelTest {
 
         assertEquals(listOf(true), translator.wifiOnlyAsked)
         assertTrue(vm.state.value.wifiOnly)
+    }
+
+    @Test
+    fun `text handed over by another app is detected and translated`() = runTest(dispatcher) {
+        val georgian = object : LanguageDetector { override suspend fun detect(text: String) = "ka" }
+        val vm = TranslateViewModel(FakeTranslator(), detector = georgian)
+
+        vm.receiveText("  გამარჯობა  ")
+        advanceUntilIdle()
+
+        assertEquals("გამარჯობა", vm.state.value.input)
+        assertEquals(TranslationDirection(Language.GEORGIAN, Language.ENGLISH), vm.state.value.direction)
+        assertEquals("[ka->en] გამარჯობა", vm.state.value.output)
+    }
+
+    @Test
+    fun `blank text handed over leaves the editor alone`() = runTest(dispatcher) {
+        val vm = TranslateViewModel(FakeTranslator())
+        vm.onInputChange("hello")
+        advanceUntilIdle()
+
+        vm.receiveText("   ")
+        advanceUntilIdle()
+
+        assertEquals("hello", vm.state.value.input)
     }
 
     @Before fun setUp() = Dispatchers.setMain(dispatcher)

@@ -26,8 +26,15 @@
         android:allowBackup="true"
         android:theme="@style/Theme.Targmani">
 
+        <!--
+          singleTop, so text picked out or shared while Targmani is already open reaches
+          onNewIntent. Without it, a share started as a new task (from a notification, a widget, a
+          service) found Targmani's task, brought it forward and dropped the text, and the earlier
+          text stayed in the box.
+        -->
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>

@@ -46,6 +46,9 @@ as a genuinely offline tool.
 - ♿ **Accessible** — every interactive control carries a label; audited across all three screens
   (translate, offline languages, history) with zero unlabelled controls.
 - 🔒 **Private & offline** — your text never leaves the device; only model files are downloaded.
+- 📲 **From any app** — select text anywhere and pick *Targmani* in the selection menu, or share
+  text to it, and it opens translated. Text selected in Targmani offers other apps' actions in
+  turn, such as a flashcard app for a word just translated.
 - 📷 **Camera translate** — deferred, and honestly so: ML Kit's text recogniser reads only Latin,
   Chinese, Devanagari, Japanese and Korean script, so it cannot read a Georgian or Arabic sign —
   exactly the two cases that would be useful here. Tracked in

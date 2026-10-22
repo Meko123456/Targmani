@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.TextAutoSize
@@ -114,7 +116,11 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
         },
     ) { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
+            // Ends at the top of the keyboard. The activity is adjustResize, so nothing else moves for
+            // it: a few lines into the text, the line being typed went under the keyboard and the
+            // screen never scrolled to it.
+            modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()
+                .padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             LanguageBar(

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -51,7 +52,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.text.TextStyle
@@ -145,16 +149,20 @@ fun TranslateScreen(onOpenModels: () -> Unit = {}, onOpenHistory: () -> Unit = {
                 onTextChange = viewModel::onInputChange,
                 placeholder = "Enter text",
             )
-            StatusLine(state.status, waitingForWifi = state.wifiOnly && !onWifi)
-            // Target card
-            TranslateCard(
-                language = state.direction.to,
-                text = state.output,
-                rtl = state.direction.targetRtl,
-                editable = false,
-                onTextChange = {},
-                placeholder = "Translation",
-            )
+            // The status line and the target card are one child of this spaced column: the line has
+            // no height while idle, and the 8 dp under it come with its words.
+            Column {
+                StatusLine(state.status, waitingForWifi = state.wifiOnly && !onWifi)
+                // Target card
+                TranslateCard(
+                    language = state.direction.to,
+                    text = state.output,
+                    rtl = state.direction.targetRtl,
+                    editable = false,
+                    onTextChange = {},
+                    placeholder = "Translation",
+                )
+            }
             if (state.output.isNotBlank()) {
                 ResultActions(
                     onCopy = {
@@ -269,28 +277,45 @@ private fun TranslateCard(
     }
 }
 
-@Composable
-private fun StatusLine(status: TranslateStatus, waitingForWifi: Boolean) {
-    when (status) {
-        TranslateStatus.Idle -> Unit
-        TranslateStatus.Downloading -> InlineProgress(
-            if (waitingForWifi) "Waiting for Wi-Fi to download the language model…" else "Downloading language model…",
-        )
-        TranslateStatus.Translating -> InlineProgress("Translating…")
-        is TranslateStatus.Error -> Text(
-            status.message,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.padding(horizontal = 4.dp),
-        )
-    }
-}
+/** The status line between the two cards, for tests. */
+internal const val STATUS_LINE_TAG = "status-line"
 
+/**
+ * What translating is doing. TalkBack is told about a model download, the wait for Wi-Fi and an
+ * error, as a polite live region, where the user is: each is something to wait for or act on.
+ * Not "Translating…", which comes and goes at every pause in typing and would talk over it.
+ *
+ * The line is always composed, empty and with no height while idle, so each change is a change
+ * of one node's words: a node that newly appears isn't announced. The 8 dp under it come with
+ * its words, so each state looks as it did.
+ */
 @Composable
-private fun InlineProgress(label: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        CircularProgressIndicator(modifier = Modifier.padding(4.dp), strokeWidth = 2.dp)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+internal fun StatusLine(status: TranslateStatus, waitingForWifi: Boolean) {
+    val words = when (status) {
+        TranslateStatus.Idle -> ""
+        TranslateStatus.Downloading ->
+            if (waitingForWifi) "Waiting for Wi-Fi to download the language model…" else "Downloading language model…"
+        TranslateStatus.Translating -> "Translating…"
+        is TranslateStatus.Error -> status.message
+    }
+    val announced = status == TranslateStatus.Downloading || status is TranslateStatus.Error
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = if (status == TranslateStatus.Idle) Modifier.height(0.dp) else Modifier.padding(bottom = 8.dp),
+    ) {
+        if (status == TranslateStatus.Downloading || status == TranslateStatus.Translating) {
+            CircularProgressIndicator(modifier = Modifier.padding(4.dp), strokeWidth = 2.dp)
+        }
+        Text(
+            words,
+            style = MaterialTheme.typography.bodySmall,
+            color = if (status is TranslateStatus.Error) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .testTag(STATUS_LINE_TAG)
+                .then(if (status is TranslateStatus.Error) Modifier.padding(horizontal = 4.dp) else Modifier)
+                .semantics { if (announced) liveRegion = LiveRegionMode.Polite },
+        )
     }
 }
 

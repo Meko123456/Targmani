@@ -58,7 +58,7 @@ as a genuinely offline tool.
 ## Architecture
 
 ```
-domain/    pure Kotlin, 41 unit tests (53 in the repo) — Language (BCP-47 + endonyms + RTL), LanguageCatalog
+domain/    pure Kotlin, 41 unit tests (67 in the repo) — Language (BCP-47 + endonyms + RTL), LanguageCatalog
            (offered languages, direction & model-pair math), TranslationDirection (+ swap),
            ModelPlanner (what a direction still needs, English-pivot rules), HistoryPolicy
            (what is worth recording), DetectionMapper, SettingsCodec, SpeechLocale, and the

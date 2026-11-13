@@ -1,10 +1,10 @@
 [versions]
-agp = "9.4.1"
+agp = "9.5.1"
 kotlin = "2.4.21"
 composeBom = "2026.09.00"
 activityCompose = "1.13.0"
 lifecycle = "2.11.0"
-datastore = "1.2.1"
+datastore = "1.3.0"
 mlkitTranslate = "17.0.3"
 mlkitLanguageId = "17.0.6"
 junit = "4.13.2"
@@ -12,7 +12,7 @@ robolectric = "4.17"
 androidxTestJunit = "1.3.0"
 coroutinesTest = "1.11.0"
 room = "2.8.5"
-ksp = "2.3.11"
+ksp = "2.3.13"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
